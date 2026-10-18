@@ -369,6 +369,9 @@ textarea:focus-visible {
   padding: 22px 0 20px;
   gap: 12px;
 }
+.media-filter-row {
+  padding-top: 16px;
+}
 .filter-tabs {
   display: flex;
   gap: 7px;
@@ -625,6 +628,16 @@ textarea:focus-visible {
 }
 .book-card-info {
   padding-top: 17px;
+}
+.book-card-kind {
+  display: inline-block;
+  margin-bottom: 7px;
+  padding: 3px 7px;
+  border-radius: 3px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 9px;
+  line-height: 1.4;
 }
 .book-card-info h2 {
   font-size: 13px;
@@ -1788,6 +1801,9 @@ textarea:focus-visible {
   .filter-row {
     padding: 17px 0 16px;
     gap: 4px;
+  }
+  .media-filter-row {
+    padding-top: 12px;
   }
   .filter-tabs {
     gap: 1px;

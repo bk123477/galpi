@@ -20,11 +20,13 @@ import {
 import { auth, authReady, ownerUid, useEmulators } from './firebase'
 import { useLibrary } from './state'
 import {
+  bookTypes,
   filterBooks,
   formatDate,
+  mediaTypes,
   statuses,
-  types,
   type BookStatus,
+  type MediaType,
 } from './book'
 import {
   deleteBook,
@@ -248,12 +250,28 @@ export function LibraryPage() {
   const { books, loading, error, reload } = useLibrary()
   const [search, setSearch] = useState('')
   const [status, setStatus] = useState<BookStatus | 'all'>('all')
-  const visible = filterBooks(books, search, status)
+  const [mediaType, setMediaType] = useState<MediaType | 'all'>('all')
+  const scopedBooks =
+    mediaType === 'all'
+      ? books
+      : books.filter((book) => book.mediaType === mediaType)
+  const visible = filterBooks(books, search, status, mediaType)
   const counts = {
-    all: books.length,
+    all: scopedBooks.length,
+    reading: scopedBooks.filter((b) => b.status === 'reading').length,
+    planned: scopedBooks.filter((b) => b.status === 'planned').length,
+    finished: scopedBooks.filter((b) => b.status === 'finished').length,
+  }
+  const allCounts = {
     reading: books.filter((b) => b.status === 'reading').length,
     planned: books.filter((b) => b.status === 'planned').length,
     finished: books.filter((b) => b.status === 'finished').length,
+  }
+  const mediaCounts = {
+    all: books.length,
+    book: books.filter((b) => b.mediaType === 'book').length,
+    drama: books.filter((b) => b.mediaType === 'drama').length,
+    movie: books.filter((b) => b.mediaType === 'movie').length,
   }
   return (
     <main id="main" className="library-page">
@@ -267,18 +285,18 @@ export function LibraryPage() {
             이야기가 쌓이는 곳,
             <br className="mobile-break" /> <span>나의 서재.</span>
           </h1>
-          <p className="intro-description">읽었던 이야기를, 잊지 않도록.</p>
+          <p className="intro-description">읽고, 보고, 오래 기억할 작품을.</p>
           <p className="library-summary" aria-label="서재 요약">
-            전체 <strong>{counts.all}</strong>권<span>·</span>읽는 중{' '}
-            <strong>{counts.reading}</strong>
-            <span>·</span>읽을 예정 <strong>{counts.planned}</strong>
-            <span>·</span>읽음 <strong>{counts.finished}</strong>
+            전체 <strong>{books.length}</strong>개<span>·</span>진행 중{' '}
+            <strong>{allCounts.reading}</strong>
+            <span>·</span>예정 <strong>{allCounts.planned}</strong>
+            <span>·</span>완료 <strong>{allCounts.finished}</strong>
           </p>
         </div>
         <div className="intro-bookmark" aria-hidden="true">
           <Bookmark strokeWidth={0.65} />
           <span>
-            ONE BOOK,
+            ONE STORY,
             <br />
             ONE MORE MEMORY.
           </span>
@@ -289,7 +307,7 @@ export function LibraryPage() {
           <div className="search-input">
             <Search size={18} strokeWidth={1.5} />
             <input
-              aria-label="제목 또는 작가 검색"
+              aria-label="제목 또는 작가·감독 검색"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="어떤 이야기를 찾고 있나요?"
@@ -303,15 +321,30 @@ export function LibraryPage() {
                 <X size={16} />
               </button>
             )}
-            <span className="search-hint">제목 · 작가</span>
+            <span className="search-hint">제목 · 작가 · 감독</span>
           </div>
           <Link className="button button-primary desktop-add" to="/books/new">
             <Plus size={17} />
             작품 추가
           </Link>
         </div>
+        <div className="media-filter-row">
+          <div className="filter-tabs" role="group" aria-label="기록 종류 필터">
+            {(['all', 'book', 'drama', 'movie'] as const).map((key) => (
+              <button
+                key={key}
+                aria-pressed={mediaType === key}
+                onClick={() => setMediaType(key)}
+                className={mediaType === key ? 'active' : ''}
+              >
+                {key === 'all' ? '전체' : mediaTypes[key]}
+                <span>{mediaCounts[key]}</span>
+              </button>
+            ))}
+          </div>
+        </div>
         <div className="filter-row">
-          <div className="filter-tabs" role="group" aria-label="독서 상태 필터">
+          <div className="filter-tabs" role="group" aria-label="진행 상태 필터">
             {(['all', 'reading', 'planned', 'finished'] as const).map((key) => (
               <button
                 key={key}
@@ -341,6 +374,7 @@ export function LibraryPage() {
             onReset={() => {
               setSearch('')
               setStatus('all')
+              setMediaType('all')
             }}
           />
         ) : (
@@ -433,7 +467,16 @@ export function DetailPage() {
   }
   return (
     <main id="main" className="detail-page">
-      <PageHeading title="이야기 한 권" eyebrow="BETWEEN THE PAGES" />
+      <PageHeading
+        title={
+          book.mediaType === 'book'
+            ? '책 한 권'
+            : book.mediaType === 'drama'
+              ? '드라마 한 편'
+              : '영화 한 편'
+        }
+        eyebrow="A STORY TO KEEP"
+      />
       <article className="book-detail">
         <div className="detail-cover">
           <Cover book={book} large />
@@ -441,17 +484,20 @@ export function DetailPage() {
         </div>
         <div className="detail-content">
           <div className="detail-meta">
-            <span>{types[book.type]}</span>
+            <span>{mediaTypes[book.mediaType]}</span>
+            {book.mediaType === 'book' && book.type && (
+              <span>{bookTypes[book.type]}</span>
+            )}
             <Status book={book} />
           </div>
           <h2>{book.title}</h2>
           <p className="detail-author">
-            {book.author || '작가를 기록하지 않았어요'}
+            {book.author || '작가·감독을 기록하지 않았어요'}
           </p>
           {book.status === 'finished' && book.finishedAt && (
             <p className="finished-date">
               <Check size={14} />
-              {formatDate(book.finishedAt)}에 읽음
+              {formatDate(book.finishedAt)}에 완료했어요
             </p>
           )}
           <div className="detail-actions">
@@ -487,7 +533,7 @@ export function DetailPage() {
             )}
           </section>
           <p className="record-date">
-            {formatDate(book.createdAt)}에 서재에 꽂았어요
+            {formatDate(book.createdAt)}에 서재에 기록했어요
           </p>
         </div>
       </article>

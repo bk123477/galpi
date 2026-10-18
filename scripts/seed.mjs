@@ -42,23 +42,26 @@ if (!create.ok && !/EMAIL_EXISTS|DUPLICATE_LOCAL_ID/.test(await create.text()))
 await signInWithEmailAndPassword(auth, email, password)
 if (process.argv.includes('--books')) {
   const stories = [
-    ['밤을 건너는 도서관', '윤서하', 'reading', 'webnovel'],
-    ['계절의 가장자리', '이유림', 'finished', 'book'],
-    ['마지막 정원사', '정해온', 'planned', 'webnovel'],
-    ['우리가 머문 여름', '김여울', 'finished', 'book'],
-    ['별을 수놓는 사람', '서도하', 'reading', 'webnovel'],
-    ['아주 느린 산책', '한나래', 'finished', 'book'],
-    ['잊힌 세계의 기록', '류시온', 'planned', 'webnovel'],
-    ['종이 위의 작은 숲', '문다정', 'finished', 'other'],
+    ['밤을 건너는 도서관', '윤서하', 'reading', 'book', 'webnovel'],
+    ['계절의 가장자리', '이유림', 'finished', 'book', 'book'],
+    ['마지막 정원사', '정해온', 'planned', 'book', 'webnovel'],
+    ['우리가 머문 여름', '김여울', 'finished', 'book', 'book'],
+    ['별을 수놓는 사람', '서도하', 'reading', 'book', 'webnovel'],
+    ['아주 느린 산책', '한나래', 'finished', 'book', 'book'],
+    ['잊힌 세계의 기록', '류시온', 'planned', 'book', 'webnovel'],
+    ['종이 위의 작은 숲', '문다정', 'finished', 'book', 'other'],
+    ['우리가 머문 계절', '정은채', 'finished', 'drama'],
+    ['푸른 저녁의 끝', '박이든', 'planned', 'movie'],
   ]
-  for (const [i, [title, author, status, type]] of stories.entries()) {
+  for (const [i, [title, author, status, mediaType, type]] of stories.entries()) {
     const target = doc(db, 'users/galpi-owner/books', `sample-${i}`)
     if ((await getDoc(target)).exists()) continue
     await setDoc(target, {
       title,
       author,
       status,
-      type,
+      mediaType,
+      ...(type ? { type } : {}),
       note: '로컬 디자인 검수용 가상 작품입니다. 실제 작품 정보가 아닙니다.',
       coverPath: null,
       createdAt: serverTimestamp(),

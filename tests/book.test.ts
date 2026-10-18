@@ -23,11 +23,30 @@ const book = (overrides: Partial<Book> = {}): Book => ({
   ...overrides,
 })
 describe('작품 기록', () => {
-  it('제목만으로 등록하며 기본 상태와 유형을 유지한다', () => {
+  it('제목만으로 등록하며 책 기본값을 유지한다', () => {
     expect(validateBook({ ...emptyBook, title: '  책 한 권  ' })).toEqual({
       ...emptyBook,
       title: '책 한 권',
     })
+  })
+  it('책·드라마·영화를 검증하고 책이 아닌 유형에서 책 세부 유형을 제거한다', () => {
+    expect(
+      validateBook({ ...emptyBook, title: '드라마', mediaType: 'drama' }),
+    ).toMatchObject({ mediaType: 'drama' })
+    expect(
+      validateBook({ ...emptyBook, title: '영화', mediaType: 'movie' }),
+    ).toMatchObject({ mediaType: 'movie' })
+    expect(
+      validateBook({
+        ...emptyBook,
+        title: '영화',
+        mediaType: 'movie',
+        type: 'book',
+      }),
+    ).not.toHaveProperty('type')
+    expect(() =>
+      validateBook({ ...emptyBook, title: '작품', mediaType: 'series' } as never),
+    ).toThrow()
   })
   it('공백 제목, 긴 입력, 잘못된 상태를 거절한다', () => {
     for (const data of [
@@ -38,6 +57,7 @@ describe('작품 기록', () => {
       { status: 'invalid' },
       { status: 'constructor' },
       { type: '__proto__' },
+      { mediaType: '__proto__' },
     ]) {
       expect(() =>
         validateBook({
@@ -74,6 +94,12 @@ describe('작품 기록', () => {
         author: '한여름',
       }),
     ).toBe(true)
+    expect(
+      isDuplicate(
+        [book()],
+        { ...emptyBook, title: '달빛 도서관', author: '한여름', mediaType: 'movie' },
+      ),
+    ).toBe(false)
     expect(isDuplicate([book()], book(), 'a')).toBe(false)
   })
   it('읽음 진입 때 날짜를 설정하고 메모 수정 때 보존하며 이탈 때 지운다', () => {

@@ -34,6 +34,7 @@ const data = (extra = {}) => ({
   author: '',
   note: '',
   type: 'webnovel',
+  mediaType: 'book',
   status: 'finished',
   coverPath: null,
   createdAt: serverTimestamp(),
@@ -86,6 +87,40 @@ describe('Firestore 소유자 전용 규칙', () => {
     ).toBe(1)
     await assertSucceeds(deleteDoc(doc(db, path)))
   })
+  it('기존 책 문서와 유형별 드라마·영화 문서를 허용한다', async () => {
+    const db = env.authenticatedContext(uid).firestore()
+    const legacy = data() as Record<string, unknown>
+    delete legacy.mediaType
+    await assertSucceeds(setDoc(doc(db, path), legacy))
+    await assertSucceeds(
+      updateDoc(doc(db, path), {
+        mediaType: 'book',
+        updatedAt: serverTimestamp(),
+      }),
+    )
+    const drama = data({ mediaType: 'drama' }) as Record<string, unknown>
+    delete drama.type
+    await assertSucceeds(
+      setDoc(doc(db, `users/${uid}/books/drama`), drama),
+    )
+    const movie = data({ mediaType: 'movie' }) as Record<string, unknown>
+    delete movie.type
+    await assertSucceeds(
+      setDoc(doc(db, `users/${uid}/books/movie`), movie),
+    )
+    await assertFails(
+      setDoc(doc(db, `users/${uid}/books/invalid`), data({ mediaType: 'drama' })),
+    )
+    const noType = data() as Record<string, unknown>
+    delete noType.type
+    await assertFails(setDoc(doc(db, `users/${uid}/books/no-type`), noType))
+    await assertFails(
+      setDoc(
+        doc(db, `users/${uid}/books/mixed-type`),
+        data({ mediaType: 'movie' }),
+      ),
+    )
+  })
   it.each(['anonymous', 'intruder'])(
     '%s의 읽기/쓰기/목록/삭제 및 자기 경로도 차단한다',
     async (who) => {
@@ -123,6 +158,7 @@ describe('Firestore 소유자 전용 규칙', () => {
       { author: 'a'.repeat(121) },
       { note: 'a'.repeat(2001) },
       { type: 'comic' },
+      { mediaType: 'series' },
       { status: 'unknown' },
       { id: 'stored-id' },
       { author: 42 },

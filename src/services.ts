@@ -46,8 +46,14 @@ export function watchBooks(
     (snapshot) => {
       onBooks(
         snapshot.docs.map(
-          (d) =>
-            ({ ...d.data({ serverTimestamps: 'estimate' }), id: d.id }) as Book,
+          (d) => {
+            const data = d.data({ serverTimestamps: 'estimate' })
+            return {
+              ...data,
+              id: d.id,
+              mediaType: data.mediaType ?? 'book',
+            } as Book
+          },
         ),
       )
     },

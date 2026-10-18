@@ -9,9 +9,10 @@ import { useBlocker, useNavigate, useParams } from 'react-router-dom'
 import { Check, ImagePlus, Plus, X } from 'lucide-react'
 import {
   emptyBook,
+  bookTypes,
   isDuplicate,
+  mediaTypes,
   statuses,
-  types,
   validateBook,
   type Book,
   type BookInput,
@@ -65,6 +66,7 @@ function BookForm({ existing }: { existing?: Book }) {
           author: existing.author,
           note: existing.note,
           status: existing.status,
+          mediaType: existing.mediaType ?? 'book',
           type: existing.type,
         }
       : { ...emptyBook },
@@ -217,7 +219,7 @@ function BookForm({ existing }: { existing?: Book }) {
               <p>
                 좋아하는 표지를 함께 남겨보세요.
                 <br />
-                표지가 없어도 멋진 책으로 꽂아드릴게요.
+                표지가 없어도 작품을 서재에 담아드릴게요.
               </p>
               <input
                 ref={fileInput}
@@ -258,6 +260,37 @@ function BookForm({ existing }: { existing?: Book }) {
           </section>
           <div className="form-fields">
             <div className="form-field">
+              <label id="media-type-label">기록 종류</label>
+              <div
+                className="segmented-control"
+                role="group"
+                aria-labelledby="media-type-label"
+              >
+                {(Object.keys(mediaTypes) as (keyof typeof mediaTypes)[]).map(
+                  (key) => (
+                    <button
+                      key={key}
+                      type="button"
+                      aria-pressed={input.mediaType === key}
+                      className={input.mediaType === key ? 'selected' : ''}
+                      onClick={() =>
+                        setInput((previous) => ({
+                          ...previous,
+                          mediaType: key,
+                          type:
+                            key === 'book'
+                              ? (previous.type ?? 'webnovel')
+                              : previous.type,
+                        }))
+                      }
+                    >
+                      {mediaTypes[key]}
+                    </button>
+                  ),
+                )}
+              </div>
+            </div>
+            <div className="form-field">
               <label htmlFor="title">
                 작품 제목 <span className="required-label">필수</span>
               </label>
@@ -279,19 +312,19 @@ function BookForm({ existing }: { existing?: Book }) {
             </div>
             <div className="form-field">
               <label htmlFor="author">
-                작가 <span className="optional-label">선택</span>
+                작가 / 감독 <span className="optional-label">선택</span>
               </label>
               <input
                 id="author"
                 maxLength={120}
                 value={input.author}
                 onChange={(e) => change('author', e.target.value)}
-                placeholder="이야기를 쓴 사람"
+                placeholder="작가나 감독 등 작품을 만든 사람"
                 autoComplete="off"
               />
             </div>
             <div className="form-field">
-              <label id="status-label">독서 상태</label>
+              <label id="status-label">진행 상태</label>
               <div
                 className="segmented-control"
                 role="group"
@@ -311,26 +344,30 @@ function BookForm({ existing }: { existing?: Book }) {
                 ))}
               </div>
             </div>
-            <div className="form-field">
-              <label id="type-label">작품 유형</label>
-              <div
-                className="type-options"
-                role="group"
-                aria-labelledby="type-label"
-              >
-                {(Object.keys(types) as (keyof typeof types)[]).map((key) => (
-                  <button
-                    key={key}
-                    type="button"
-                    aria-pressed={input.type === key}
-                    className={input.type === key ? 'selected' : ''}
-                    onClick={() => change('type', key)}
-                  >
-                    {types[key]}
-                  </button>
-                ))}
+            {input.mediaType === 'book' && (
+              <div className="form-field">
+                <label id="type-label">책의 세부 유형</label>
+                <div
+                  className="type-options"
+                  role="group"
+                  aria-labelledby="type-label"
+                >
+                  {(Object.keys(bookTypes) as (keyof typeof bookTypes)[]).map(
+                    (key) => (
+                      <button
+                        key={key}
+                        type="button"
+                        aria-pressed={input.type === key}
+                        className={input.type === key ? 'selected' : ''}
+                        onClick={() => change('type', key)}
+                      >
+                        {bookTypes[key]}
+                      </button>
+                    ),
+                  )}
+                </div>
               </div>
-            </div>
+            )}
             <div className="form-field">
               <label htmlFor="note">
                 짧은 메모 <span className="optional-label">선택</span>
@@ -341,7 +378,7 @@ function BookForm({ existing }: { existing?: Book }) {
                 maxLength={2000}
                 value={input.note}
                 onChange={(e) => change('note', e.target.value)}
-                placeholder="무슨 내용이었더라? 기억하고 싶은 장면만 적어두세요."
+                placeholder="기억하고 싶은 장면이나 문장을 남겨보세요."
               />
               <span className="character-count">
                 {input.note.length.toLocaleString()} / 2,000

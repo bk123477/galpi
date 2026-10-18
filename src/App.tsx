@@ -44,7 +44,7 @@ function Frame() {
         <Outlet />
         <footer className="app-footer">
           <span>갈피</span>
-          <p>읽었던 이야기를, 잊지 않도록.</p>
+          <p>읽고 본 이야기를, 잊지 않도록.</p>
           <span className="footer-note">A LITTLE SPACE FOR YOUR STORIES</span>
         </footer>
       </div>

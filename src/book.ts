@@ -1,23 +1,30 @@
 import type { Timestamp } from 'firebase/firestore'
 
 export const statuses = {
-  reading: '읽는 중',
-  planned: '읽을 예정',
-  finished: '읽음',
+  reading: '진행 중',
+  planned: '예정',
+  finished: '완료',
 } as const
-export const types = {
+export const mediaTypes = {
+  book: '책',
+  drama: '드라마',
+  movie: '영화',
+} as const
+export const bookTypes = {
   webnovel: '웹소설',
   book: '일반 도서',
   other: '기타',
 } as const
 export type BookStatus = keyof typeof statuses
-export type BookType = keyof typeof types
+export type MediaType = keyof typeof mediaTypes
+export type BookType = keyof typeof bookTypes
 export interface BookInput {
   title: string
   author: string
   note: string
   status: BookStatus
-  type: BookType
+  mediaType: MediaType
+  type?: BookType
 }
 export interface Book extends BookInput {
   id: string
@@ -31,6 +38,7 @@ export const emptyBook: BookInput = {
   author: '',
   note: '',
   status: 'finished',
+  mediaType: 'book',
   type: 'webnovel',
 }
 
@@ -45,8 +53,14 @@ export function validateBook(input: BookInput): BookInput {
     throw new Error('제목과 작가는 120자 이내로 입력해 주세요.')
   if (data.note.length > 2000)
     throw new Error('메모는 2,000자 이내로 입력해 주세요.')
-  if (!Object.hasOwn(statuses, data.status) || !Object.hasOwn(types, data.type))
-    throw new Error('독서 상태와 작품 유형을 확인해 주세요.')
+  if (
+    !Object.hasOwn(statuses, data.status) ||
+    !Object.hasOwn(mediaTypes, data.mediaType) ||
+    (data.mediaType === 'book' &&
+      (!data.type || !Object.hasOwn(bookTypes, data.type)))
+  )
+    throw new Error('작품 종류와 진행 상태를 확인해 주세요.')
+  if (data.mediaType !== 'book') delete data.type
   return data
 }
 const normalize = (value: string) =>
@@ -55,12 +69,14 @@ export function filterBooks(
   books: Book[],
   search: string,
   status: BookStatus | 'all',
+  mediaType: MediaType | 'all' = 'all',
 ) {
   const query = normalize(search)
   return books
     .filter(
       (b) =>
         (status === 'all' || b.status === status) &&
+        (mediaType === 'all' || b.mediaType === mediaType) &&
         (!query ||
           normalize(b.title).includes(query) ||
           normalize(b.author).includes(query)),
@@ -77,6 +93,7 @@ export function isDuplicate(books: Book[], input: BookInput, id?: string) {
     books.some(
       (b) =>
         b.id !== id &&
+        b.mediaType === input.mediaType &&
         normalize(b.title) === normalize(input.title) &&
         normalize(b.author) === normalize(input.author),
     )

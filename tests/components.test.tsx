@@ -31,7 +31,8 @@ describe('서재 UI', () => {
       </MemoryRouter>,
     )
     expect(screen.getByRole('heading', { name: '책' })).toBeVisible()
-    expect(screen.getByText('읽음')).toBeVisible()
+    expect(screen.getByText('완료')).toBeVisible()
+    expect(document.querySelector('.book-card-kind')).toHaveTextContent('책')
     expect(screen.getByRole('link')).toHaveAttribute('href', '/books/id')
   })
   it('검색 결과가 없으면 검색과 필터 초기화를 제공한다', () => {

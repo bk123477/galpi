@@ -52,7 +52,7 @@ test('로그인 유지, 제목 등록, 검색·필터, 수정·날짜 보존, �
   ).toBeVisible()
   await fullNavigation('/books/new')
   await expect(
-    page.getByRole('button', { name: '읽음', exact: true }),
+    page.getByRole('button', { name: '완료', exact: true }),
   ).toHaveAttribute('aria-pressed', 'true')
   await expect(
     page.getByRole('button', { name: '웹소설', exact: true }),
@@ -75,9 +75,9 @@ test('로그인 유지, 제목 등록, 검색·필터, 수정·날짜 보존, �
   await fullNavigation()
   await expect(page.locator('.detail-author')).toHaveText('한여름')
   await page.getByRole('link', { name: '서재로', exact: true }).click()
-  await page.getByLabel('제목 또는 작가 검색').fill(' 한여름 ')
+  await page.getByLabel('제목 또는 작가·감독 검색').fill(' 한여름 ')
   await expect(page.locator('.book-card')).toHaveCount(1)
-  await page.getByRole('button', { name: '읽는 중 0', exact: true }).click()
+  await page.getByRole('button', { name: '진행 중 0', exact: true }).click()
   await expect(page.getByText('일치하는 작품이 없어요.')).toBeVisible()
   await page.getByRole('button', { name: '검색·필터 초기화' }).click()
   await page.locator('.book-card').click()
@@ -106,6 +106,37 @@ test('로그인 유지, 제목 등록, 검색·필터, 수정·날짜 보존, �
     ),
   ).toBe(false)
   expect(errors).toEqual([])
+})
+test('드라마와 영화를 추가하고 종류 필터로 구분한다', async ({ page }) => {
+  await login(page)
+  await page.goto('/books/new')
+  await page.getByRole('button', { name: '드라마', exact: true }).click()
+  await expect(page.getByRole('group', { name: '책의 세부 유형' })).toHaveCount(0)
+  await page.getByLabel('작품 제목').fill('파도 너머')
+  await page.getByRole('button', { name: '서재에 꽂기' }).click()
+  await expect(
+    page.getByRole('heading', { name: '드라마 한 편', exact: true }),
+  ).toBeVisible()
+  const dramaId = page.url().split('/').pop()
+  await page.getByRole('link', { name: '서재로', exact: true }).click()
+  await page.goto('/books/new')
+  await expect(page.getByRole('button', { name: '영화', exact: true })).toBeVisible()
+  await page.getByRole('button', { name: '영화', exact: true }).click()
+  await expect(page.getByRole('group', { name: '책의 세부 유형' })).toHaveCount(0)
+  await page.getByLabel('작품 제목').fill('푸른 저녁의 끝')
+  await page.getByRole('button', { name: '서재에 꽂기' }).click()
+  await expect(
+    page.getByRole('heading', { name: '영화 한 편', exact: true }),
+  ).toBeVisible()
+  expect(page.url().split('/').pop()).not.toBe(dramaId)
+  await page.goto('/')
+  const mediaFilter = page.getByRole('group', { name: '기록 종류 필터' })
+  await mediaFilter.getByRole('button', { name: /영화/ }).click()
+  await expect(page.locator('.book-card')).toHaveCount(1)
+  await expect(page.locator('.book-card-kind')).toHaveText('영화')
+  await mediaFilter.getByRole('button', { name: /드라마/ }).click()
+  await expect(page.locator('.book-card')).toHaveCount(1)
+  await expect(page.locator('.book-card-kind')).toHaveText('드라마')
 })
 test('앱이 기억한 계정을 도메인 자동완성 입력란과 분리해 표시한다', async ({
   page,
@@ -227,7 +258,7 @@ test('보호 경로 차단, 반응형 레이아웃, PWA 메타데이터', async 
     fullPage: true,
   })
   execFileSync(process.execPath, ['scripts/seed.mjs', '--books'])
-  await expect(page.locator('.book-card')).toHaveCount(8)
+  await expect(page.locator('.book-card')).toHaveCount(10)
   const columns = await page
     .locator('.book-grid')
     .evaluate(

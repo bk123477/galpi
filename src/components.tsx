@@ -9,7 +9,7 @@ import {
   Settings,
   X,
 } from 'lucide-react'
-import { coverTone, statuses, type Book } from './book'
+import { coverTone, mediaTypes, statuses, type Book } from './book'
 import { coverBlob } from './services'
 
 export function Brand() {
@@ -157,12 +157,13 @@ export function BookCard({ book }: { book: Book }) {
     <Link
       className="book-card"
       to={`/books/${book.id}`}
-      aria-label={`${book.title}${book.author ? ` · ${book.author}` : ''} · ${statuses[book.status]}`}
+      aria-label={`${book.title}${book.author ? ` · ${book.author}` : ''} · ${mediaTypes[book.mediaType]} · ${statuses[book.status]}`}
     >
       <Cover book={book} />
       <div className="book-card-info">
+        <span className="book-card-kind">{mediaTypes[book.mediaType]}</span>
         <h2>{book.title}</h2>
-        <p className="book-author">{book.author || '작가 미기록'}</p>
+        <p className="book-author">{book.author || '작가·감독 미기록'}</p>
         <Status book={book} />
       </div>
       <ArrowUpRight className="card-arrow" size={16} aria-hidden="true" />
@@ -193,7 +194,7 @@ export function Empty({
       </h2>
       <p>
         {search
-          ? '다른 제목이나 작가로 찾아보세요.'
+          ? '다른 제목, 작가나 감독으로 찾아보세요.'
           : '좋아했던 제목 하나면 충분해요.\n기억하고 싶은 이야기를 차곡차곡 모아보세요.'}
       </p>
       {search ? (
