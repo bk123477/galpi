@@ -68,7 +68,7 @@ export JAVA_HOME="$(/usr/libexec/java_home -v 21)"
 2. Authentication → Sign-in method에서 **Email/Password**를 켭니다. Authentication → Users에서 소유자 계정 하나를 직접 생성하고 그 계정의 **UID**를 복사합니다. 앱에는 회원가입 화면이 없으므로 소유자 계정도 콘솔에서 준비해야 합니다.
 3. Firestore Database를 **Standard edition / Native mode**로 생성합니다. 컬렉션이나 테스트 데이터를 직접 만들 필요는 없습니다. 앱이 첫 작품을 저장할 때 생성합니다.
 4. Storage에서 기본 버킷을 만듭니다. Firebase Storage는 현재 Blaze 종량제 요금제와 결제 계정 연결이 필요합니다. Storage 버킷에는 `asia-northeast3`(서울)을 권장합니다. Firestore와 Storage 위치는 생성한 뒤 바꿀 수 없으므로 두 위치를 정한 다음 만드세요. Firestore에 서울이 제공되지 않는 프로젝트에서는 원하는 위치를 선택합니다. [Firestore 위치](https://firebase.google.com/docs/firestore/locations), [Storage 위치](https://firebase.google.com/docs/storage/locations).
-5. Authentication → Settings → Authorized domains에 Hosting 주소가 있는지 확인합니다. 현재 배포 주소는 `galpi-11e97.web.app`입니다. 로컬에서 실제 Firebase에 직접 접속해 시험하려면 `localhost`와 `127.0.0.1`도 추가합니다.
+5. Authentication → Settings → Authorized domains에 Hosting 주소가 있는지 확인합니다. 배포 주소는 `galpi.web.app`입니다. 로컬에서 실제 Firebase에 직접 접속해 시험하려면 `localhost`와 `127.0.0.1`도 추가합니다.
 
 ### `.env.local` 만들기
 
@@ -125,7 +125,7 @@ npm run test:rules
 npm run deploy
 ```
 
-`.firebaserc`는 기본 배포 대상으로 `galpi-11e97`을 가리킵니다. `npm run deploy`가 `.env.local`의 소유자 UID로 Firestore·Storage 규칙을 만들고, 프로덕션 빌드를 생성해 Firebase Hosting과 규칙을 배포합니다. 사이트 주소는 [https://galpi-11e97.web.app](https://galpi-11e97.web.app)입니다. 배포 뒤 소유자 계정으로 로그인해 작품 저장과 표지 보기를 확인하세요.
+`.firebaserc`는 Firebase 프로젝트 `galpi-11e97`을, `firebase.json`은 해당 프로젝트의 Hosting 사이트 `galpi`를 가리킵니다. `npm run deploy`가 `.env.local`의 소유자 UID로 Firestore·Storage 규칙을 만들고, 프로덕션 빌드를 생성해 Firebase Hosting과 규칙을 배포합니다. 사이트 주소는 [https://galpi.web.app](https://galpi.web.app)입니다. 배포 뒤 소유자 계정으로 로그인해 작품 저장과 표지 보기를 확인하세요.
 
 `.firebaserc`에 기본 프로젝트가 지정돼 있습니다. 프로젝트를 바꿀 때만 alias를 변경하세요.
 
@@ -135,7 +135,7 @@ firebase use --add
 
 배포 전에 자동으로 실행되는 검사는 `.env.local`에 Firebase 설정과 UID가 있는지, 에뮬레이터 모드가 아닌지, Firebase CLI에서 선택한 프로젝트와 `.env.local` 프로젝트가 일치하는지 확인합니다. 검사에 실패하면 표시된 값부터 수정하세요. 배포된 뒤 Firebase Console → Hosting에서 배포 버전과 사이트 주소를 확인할 수 있습니다.
 
-배포 후 Firebase Storage 버킷에 위 CORS 설정을 적용하고, `https://galpi-11e97.web.app`에서 로그인·표지 보기를 확인하세요. 별도 커스텀 도메인을 연결하면 Authentication 승인 도메인과 `storage.cors.json`에 해당 도메인도 추가해야 합니다.
+`storage.cors.json`은 `galpi.web.app`을 허용합니다. 배포 후 Firebase Storage 버킷에 위 CORS 설정을 적용하고, `https://galpi.web.app`에서 로그인·표지 보기를 확인하세요. 별도 커스텀 도메인을 연결하면 Authentication 승인 도메인과 `storage.cors.json`에 해당 도메인도 추가해야 합니다.
 
 배포 프로젝트를 바꾸려면 `npx firebase use --add`로 새 프로젝트를 선택합니다. 프로젝트 설정 중간에 멈추면 **Firestore와 Storage의 위치는 생성 후 변경할 수 없으므로**, 데이터베이스나 버킷을 만들기 전에 지역을 다시 확인하세요.
 
@@ -175,7 +175,7 @@ Firestore와 Storage 사이에는 트랜잭션이 없으므로 강제 종료, �
 
 ## 테스트와 검수
 
-2026-10-18 실행 결과: TypeScript/PWA 빌드, 단위·UI·실패 복구 17개, 보안 규칙 11개, Chromium/WebKit E2E 8개가 통과했습니다. Firebase Hosting과 Firestore/Storage Rules를 `galpi-11e97`에 배포했고 공개 페이지·PWA 경로를 확인했습니다. 소유자 계정 로그인과 실제 iPhone 검수는 아직 하지 않았습니다.
+2026-10-18 실행 결과: TypeScript/PWA 빌드, 단위·UI·실패 복구 17개, 보안 규칙 11개, Chromium/WebKit E2E 8개가 통과했습니다. Firebase Hosting 사이트 `galpi`와 Firestore/Storage Rules를 프로젝트 `galpi-11e97`에 배포했고 공개 페이지·PWA 경로를 확인했습니다. 소유자 계정 로그인과 실제 iPhone 검수는 아직 하지 않았습니다.
 
 ```sh
 npm test                       # 입력/검색/날짜/이미지 크기, UI, 저장 실패 복구

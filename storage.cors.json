@@ -1,8 +1,8 @@
 [
   {
     "origin": [
-      "https://galpi-11e97.web.app",
-      "https://galpi-11e97.firebaseapp.com"
+      "https://galpi.web.app",
+      "https://galpi.firebaseapp.com"
     ],
     "method": ["GET"],
     "responseHeader": ["Content-Type"],

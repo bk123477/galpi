@@ -9,6 +9,7 @@
     "predeploy": ["npm run prepare:rules"]
   },
   "hosting": {
+    "site": "galpi",
     "predeploy": ["npm run prepare:rules", "npm run build"],
     "public": "dist",
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
