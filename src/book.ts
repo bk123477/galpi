@@ -21,6 +21,7 @@ export type BookType = keyof typeof bookTypes
 export interface BookInput {
   title: string
   author: string
+  actors?: string
   note: string
   status: BookStatus
   mediaType: MediaType
@@ -49,8 +50,8 @@ export function validateBook(input: BookInput): BookInput {
     author: input.author.trim(),
   }
   if (!data.title) throw new Error('제목을 입력해 주세요.')
-  if (data.title.length > 120 || data.author.length > 120)
-    throw new Error('제목과 작가는 120자 이내로 입력해 주세요.')
+  if (data.title.length > 120)
+    throw new Error('제목은 120자 이내로 입력해 주세요.')
   if (data.note.length > 2000)
     throw new Error('메모는 2,000자 이내로 입력해 주세요.')
   if (
@@ -60,11 +61,32 @@ export function validateBook(input: BookInput): BookInput {
       (!data.type || !Object.hasOwn(bookTypes, data.type)))
   )
     throw new Error('작품 종류와 진행 상태를 확인해 주세요.')
-  if (data.mediaType !== 'book') delete data.type
+  if (data.mediaType === 'book') {
+    if (data.author.length > 120)
+      throw new Error('작가 이름은 120자 이내로 입력해 주세요.')
+    delete data.actors
+  } else {
+    data.actors = (data.actors ?? '')
+      .split(',')
+      .map((name) => name.trim())
+      .filter(Boolean)
+      .join(', ')
+    if (data.actors.length > 500)
+      throw new Error('출연 배우는 500자 이내로 입력해 주세요.')
+    delete data.type
+  }
   return data
 }
 const normalize = (value: string) =>
   value.trim().normalize('NFC').toLocaleLowerCase('ko')
+const normalizePeople = (value: string) =>
+  normalize(
+    value
+      .split(',')
+      .map((name) => name.trim())
+      .filter(Boolean)
+      .join(', '),
+  )
 export function filterBooks(
   books: Book[],
   search: string,
@@ -79,7 +101,8 @@ export function filterBooks(
         (mediaType === 'all' || b.mediaType === mediaType) &&
         (!query ||
           normalize(b.title).includes(query) ||
-          normalize(b.author).includes(query)),
+          normalize(b.author).includes(query) ||
+          normalize(b.actors ?? '').includes(query)),
     )
     .sort(
       (a, b) =>
@@ -95,7 +118,10 @@ export function isDuplicate(books: Book[], input: BookInput, id?: string) {
         b.id !== id &&
         b.mediaType === input.mediaType &&
         normalize(b.title) === normalize(input.title) &&
-        normalize(b.author) === normalize(input.author),
+        (input.mediaType === 'book'
+          ? normalize(b.author) === normalize(input.author)
+          : normalizePeople(b.actors ?? '') ===
+            normalizePeople(input.actors ?? '')),
     )
   )
 }

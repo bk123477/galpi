@@ -7,13 +7,17 @@ service cloud.firestore {
     }
     function validBook(uid, bookId) {
       let d = request.resource.data;
-      let fields = ['title', 'author', 'note', 'type', 'mediaType', 'status', 'coverPath', 'createdAt', 'updatedAt', 'finishedAt'];
+      let fields = ['title', 'author', 'actors', 'note', 'type', 'mediaType', 'status', 'coverPath', 'createdAt', 'updatedAt', 'finishedAt'];
       let mediaType = d.keys().hasAny(['mediaType']) ? d.mediaType : 'book';
+      let actors = d.keys().hasAny(['actors']) ? d.actors : '';
       return d.keys().hasOnly(fields)
         && d.keys().hasAll(['title', 'author', 'note', 'status', 'coverPath', 'createdAt', 'updatedAt', 'finishedAt'])
         && d.title is string && d.title.size() > 0 && d.title.size() <= 120
         && d.title.matches('.*[^\\s].*')
         && d.author is string && d.author.size() <= 120
+        && actors is string && actors.size() <= 500
+        && (actors == '' || actors.matches('^[^,]+(, [^,]+)*$'))
+        && (mediaType != 'book' || actors == '')
         && d.note is string && d.note.size() <= 2000
         && ((mediaType == 'book' && d.keys().hasAll(['type']) && d.type in ['webnovel', 'book', 'other'])
           || (mediaType in ['drama', 'movie'] && !d.keys().hasAny(['type'])))

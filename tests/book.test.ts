@@ -44,6 +44,22 @@ describe('작품 기록', () => {
         type: 'book',
       }),
     ).not.toHaveProperty('type')
+    expect(
+      validateBook({
+        ...emptyBook,
+        title: '드라마',
+        mediaType: 'drama',
+        actors: ' 배우 하나 , , 배우 둘  ',
+      }).actors,
+    ).toBe('배우 하나, 배우 둘')
+    expect(() =>
+      validateBook({
+        ...emptyBook,
+        title: '영화',
+        mediaType: 'movie',
+        actors: '배우'.repeat(501),
+      }),
+    ).toThrow('출연 배우는 500자 이내로 입력해 주세요.')
     expect(() =>
       validateBook({ ...emptyBook, title: '작품', mediaType: 'series' } as never),
     ).toThrow()
@@ -73,11 +89,18 @@ describe('작품 기록', () => {
       book(),
       book({ id: 'b', status: 'reading' }),
       book({ id: 'c', title: 'HELLO', author: '작가' }),
+      book({
+        id: 'd',
+        title: '파도 너머',
+        mediaType: 'drama',
+        actors: '배우 하나, 배우 둘',
+      }),
     ]
     expect(filterBooks(books, ' 한여름 ', 'reading').map((b) => b.id)).toEqual([
       'b',
     ])
     expect(filterBooks(books, 'hello', 'all').map((b) => b.id)).toEqual(['c'])
+    expect(filterBooks(books, '배우 둘', 'all').map((b) => b.id)).toEqual(['d'])
     expect(filterBooks(books, '달빛', 'all').map((b) => b.id)).toEqual([
       'b',
       'a',
@@ -100,6 +123,17 @@ describe('작품 기록', () => {
         { ...emptyBook, title: '달빛 도서관', author: '한여름', mediaType: 'movie' },
       ),
     ).toBe(false)
+    expect(
+      isDuplicate(
+        [book({ mediaType: 'movie', actors: '배우 하나, 배우 둘' })],
+        {
+          ...emptyBook,
+          title: '달빛 도서관',
+          mediaType: 'movie',
+          actors: '배우 하나 , 배우 둘',
+        },
+      ),
+    ).toBe(true)
     expect(isDuplicate([book()], book(), 'a')).toBe(false)
   })
   it('읽음 진입 때 날짜를 설정하고 메모 수정 때 보존하며 이탈 때 지운다', () => {

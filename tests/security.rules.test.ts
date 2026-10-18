@@ -98,7 +98,10 @@ describe('Firestore 소유자 전용 규칙', () => {
         updatedAt: serverTimestamp(),
       }),
     )
-    const drama = data({ mediaType: 'drama' }) as Record<string, unknown>
+    const drama = data({
+      mediaType: 'drama',
+      actors: '배우 하나, 배우 둘',
+    }) as Record<string, unknown>
     delete drama.type
     await assertSucceeds(
       setDoc(doc(db, `users/${uid}/books/drama`), drama),
@@ -107,6 +110,34 @@ describe('Firestore 소유자 전용 규칙', () => {
     delete movie.type
     await assertSucceeds(
       setDoc(doc(db, `users/${uid}/books/movie`), movie),
+    )
+    const longCast = data({
+      mediaType: 'drama',
+      actors: '배우'.repeat(121),
+    }) as Record<string, unknown>
+    delete longCast.type
+    await assertSucceeds(
+      setDoc(doc(db, `users/${uid}/books/long-cast`), longCast),
+    )
+    const oversizedCast = data({
+      mediaType: 'movie',
+      actors: '배우'.repeat(501),
+    }) as Record<string, unknown>
+    delete oversizedCast.type
+    await assertFails(
+      setDoc(doc(db, `users/${uid}/books/oversized-cast`), oversizedCast),
+    )
+    const malformedCast = data({
+      mediaType: 'movie',
+      actors: '배우 하나,배우 둘',
+    }) as Record<string, unknown>
+    delete malformedCast.type
+    await assertFails(
+      setDoc(doc(db, `users/${uid}/books/malformed-cast`), malformedCast),
+    )
+    const bookWithActors = data({ actors: '배우 하나' })
+    await assertFails(
+      setDoc(doc(db, `users/${uid}/books/book-with-actors`), bookWithActors),
     )
     await assertFails(
       setDoc(doc(db, `users/${uid}/books/invalid`), data({ mediaType: 'drama' })),

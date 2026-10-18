@@ -1156,6 +1156,17 @@ textarea:focus-visible {
   font-size: 13px;
   margin-top: 15px;
 }
+.detail-author span {
+  color: var(--accent);
+}
+.detail-legacy-author {
+  color: var(--muted);
+  font-size: 11px;
+  margin-top: 6px;
+}
+.detail-legacy-author span {
+  color: var(--accent);
+}
 .finished-date {
   display: flex;
   gap: 5px;

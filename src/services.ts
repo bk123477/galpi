@@ -52,6 +52,7 @@ export function watchBooks(
               ...data,
               id: d.id,
               mediaType: data.mediaType ?? 'book',
+              actors: data.actors ?? '',
             } as Book
           },
         ),

@@ -307,10 +307,10 @@ export function LibraryPage() {
           <div className="search-input">
             <Search size={18} strokeWidth={1.5} />
             <input
-              aria-label="제목 또는 작가·감독 검색"
+              aria-label="제목·작가·배우 검색"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="어떤 이야기를 찾고 있나요?"
+              placeholder="제목, 작가, 배우 이름을 찾아보세요"
             />
             {search && (
               <button
@@ -321,7 +321,7 @@ export function LibraryPage() {
                 <X size={16} />
               </button>
             )}
-            <span className="search-hint">제목 · 작가 · 감독</span>
+            <span className="search-hint">제목 · 작가 · 배우</span>
           </div>
           <Link className="button button-primary desktop-add" to="/books/new">
             <Plus size={17} />
@@ -492,8 +492,15 @@ export function DetailPage() {
           </div>
           <h2>{book.title}</h2>
           <p className="detail-author">
-            {book.author || '작가·감독을 기록하지 않았어요'}
+            <span>{book.mediaType === 'book' ? '작가' : '출연 배우'}:</span>{' '}
+            {(book.mediaType === 'book' ? book.author : book.actors) ||
+              '아직 기록하지 않았어요'}
           </p>
+          {book.mediaType !== 'book' && book.author && (
+            <p className="detail-legacy-author">
+              <span>기존 작가·감독 기록:</span> {book.author}
+            </p>
+          )}
           {book.status === 'finished' && book.finishedAt && (
             <p className="finished-date">
               <Check size={14} />

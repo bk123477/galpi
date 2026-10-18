@@ -64,12 +64,13 @@ function BookForm({ existing }: { existing?: Book }) {
       ? {
           title: existing.title,
           author: existing.author,
+          actors: existing.actors ?? '',
           note: existing.note,
           status: existing.status,
           mediaType: existing.mediaType ?? 'book',
           type: existing.type,
         }
-      : { ...emptyBook },
+      : { ...emptyBook, actors: '' },
   )
   const [input, setInput] = useState(initial.current)
   const [cover, setCover] = useState<Blob | null | undefined>(undefined)
@@ -198,6 +199,8 @@ function BookForm({ existing }: { existing?: Book }) {
                   id: existing?.id ?? 'new-story',
                   title: input.title,
                   author: input.author,
+                  actors: input.actors,
+                  mediaType: input.mediaType,
                   type: input.type,
                   coverPath:
                     cover === null || preview
@@ -305,21 +308,33 @@ function BookForm({ existing }: { existing?: Book }) {
               />
               {isDuplicate(books, input, existing?.id) && (
                 <p className="duplicate-warning" role="status">
-                  이미 기록한 작품일 수 있어요. 같은 제목과 작가의 작품이 서재에
+                  이미 기록한 작품일 수 있어요. 같은 제목과{' '}
+                  {input.mediaType === 'book' ? '작가' : '출연 배우'}의 기록이 서재에
                   있어요. 그대로 저장할 수 있어요.
                 </p>
               )}
             </div>
             <div className="form-field">
-              <label htmlFor="author">
-                작가 / 감독 <span className="optional-label">선택</span>
+              <label htmlFor="people">
+                {input.mediaType === 'book' ? '작가' : '출연 배우'}{' '}
+                <span className="optional-label">선택</span>
               </label>
               <input
-                id="author"
-                maxLength={120}
-                value={input.author}
-                onChange={(e) => change('author', e.target.value)}
-                placeholder="작가나 감독 등 작품을 만든 사람"
+                id="people"
+                maxLength={input.mediaType === 'book' ? 120 : 500}
+                value={
+                  input.mediaType === 'book' ? input.author : (input.actors ?? '')
+                }
+                onChange={(e) => {
+                  if (input.mediaType === 'book')
+                    change('author', e.target.value)
+                  else change('actors', e.target.value)
+                }}
+                placeholder={
+                  input.mediaType === 'book'
+                    ? '책을 쓴 사람'
+                    : '배우 이름을 쉼표(,)로 구분해 입력'
+                }
                 autoComplete="off"
               />
             </div>
