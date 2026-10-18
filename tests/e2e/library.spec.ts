@@ -90,12 +90,10 @@ test('로그인 유지, 제목 등록, 검색·필터, 수정·날짜 보존, �
   await page.getByRole('link', { name: '설정', exact: true }).click()
   await page.getByRole('button', { name: '로그아웃', exact: true }).click()
   await expect(page).toHaveURL(/\/login$/)
-  await expect(page.getByLabel('이메일', { exact: true })).toHaveValue(
-    'owner@galpi.local',
-  )
-  await expect(page.getByLabel('이메일 기억하기')).toBeChecked()
+  await expect(page.getByText('owner@galpi.local')).toBeVisible()
+  await expect(page.getByLabel('이 앱에서 이메일 기억하기')).toBeChecked()
   await expect(page.getByLabel('비밀번호', { exact: true })).toHaveValue('')
-  await page.getByLabel('이메일 기억하기').uncheck()
+  await page.getByLabel('이 앱에서 이메일 기억하기').uncheck()
   expect(
     await page.evaluate(() => localStorage.getItem('galpi.rememberedEmail')),
   ).toBeNull()
@@ -108,6 +106,27 @@ test('로그인 유지, 제목 등록, 검색·필터, 수정·날짜 보존, �
     ),
   ).toBe(false)
   expect(errors).toEqual([])
+})
+test('앱이 기억한 계정을 도메인 자동완성 입력란과 분리해 표시한다', async ({
+  page,
+}) => {
+  await page.goto('/login')
+  await page.evaluate(() =>
+    localStorage.setItem('galpi.rememberedEmail', 'owner@galpi.local'),
+  )
+  await page.reload()
+  await expect(page.getByText('owner@galpi.local')).toBeVisible()
+  await expect(page.locator('form')).toHaveAttribute('autocomplete', 'off')
+  await expect(page.getByLabel('이메일', { exact: true })).toHaveCount(0)
+  await expect(page.getByLabel('비밀번호', { exact: true })).toHaveValue('')
+  await page.getByRole('button', { name: '계정 변경' }).click()
+  const email = page.getByLabel('이메일', { exact: true })
+  await expect(email).toHaveValue('owner@galpi.local')
+  await expect(email).toHaveAttribute('autocomplete', 'off')
+  await expect(page.getByLabel('비밀번호', { exact: true })).toHaveAttribute(
+    'autocomplete',
+    'off',
+  )
 })
 test('표지 업로드·교체·제거, 오프라인 입력 보호, 이탈 확인, 중복 경고', async ({
   page,

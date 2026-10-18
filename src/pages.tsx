@@ -47,13 +47,15 @@ import {
 
 export function LoginPage() {
   const { user, authLoading, authError } = useLibrary()
-  const [email, setEmail] = useState(() => {
+  const [rememberedEmail, setRememberedEmail] = useState(() => {
     try {
       return localStorage.getItem('galpi.rememberedEmail') ?? ''
     } catch {
       return ''
     }
   })
+  const [email, setEmail] = useState(rememberedEmail)
+  const [editingEmail, setEditingEmail] = useState(!rememberedEmail)
   const [password, setPassword] = useState('')
   const [rememberEmail, setRememberEmail] = useState(true)
   const [visible, setVisible] = useState(false)
@@ -61,6 +63,16 @@ export function LoginPage() {
   const [error, setError] = useState('')
   if (authLoading) return <Loading full />
   if (user) return <Navigate to="/" replace />
+  function storeRememberedEmail(value: string) {
+    const normalized = value.trim()
+    setRememberedEmail(normalized)
+    try {
+      if (normalized) localStorage.setItem('galpi.rememberedEmail', normalized)
+      else localStorage.removeItem('galpi.rememberedEmail')
+    } catch {
+      // Private browsing may block local storage; Firebase session still works.
+    }
+  }
   async function submit(event: FormEvent) {
     event.preventDefault()
     if (busy) return
@@ -78,13 +90,7 @@ export function LoginPage() {
         throw new Error(
           '소유자 전용 서재예요. 등록된 소유자 계정으로 로그인해 주세요.',
         )
-      try {
-        if (rememberEmail)
-          localStorage.setItem('galpi.rememberedEmail', email.trim())
-        else localStorage.removeItem('galpi.rememberedEmail')
-      } catch {
-        // Private browsing may block local storage; Firebase session still works.
-      }
+      storeRememberedEmail(rememberEmail ? email : '')
     } catch (e) {
       setError(errorMessage(e))
     } finally {
@@ -140,41 +146,64 @@ export function LoginPage() {
         <p className="eyebrow">WELCOME TO YOUR LIBRARY</p>
         <h2>다시 만나 반가워요.</h2>
         <p>소유자 계정으로 나의 서재를 열어주세요.</p>
-        <form onSubmit={submit}>
-          <label htmlFor="email">이메일</label>
-          <input
-            id="email"
-            type="email"
-            autoComplete="username"
-            inputMode="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@example.com"
-            disabled={busy}
-          />
+        <form onSubmit={submit} autoComplete="off">
+          {rememberedEmail && !editingEmail ? (
+            <div className="remembered-account">
+              <div>
+                <span className="remembered-account-label">
+                  이 앱이 기억한 이메일
+                </span>
+                <span className="remembered-account-email">
+                  {rememberedEmail}
+                </span>
+              </div>
+              <button
+                type="button"
+                className="text-button"
+                onClick={() => setEditingEmail(true)}
+                disabled={busy}
+              >
+                계정 변경
+              </button>
+            </div>
+          ) : (
+            <>
+              <label htmlFor="email">이메일</label>
+              <input
+                id="email"
+                type="email"
+                autoComplete="off"
+                inputMode="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+                disabled={busy}
+              />
+            </>
+          )}
           <label className="remember-email">
             <input
               type="checkbox"
               checked={rememberEmail}
               disabled={busy}
               onChange={(e) => {
-                setRememberEmail(e.target.checked)
-                if (!e.target.checked) {
-                  try {
-                    localStorage.removeItem('galpi.rememberedEmail')
-                  } catch {}
+                const checked = e.target.checked
+                setRememberEmail(checked)
+                if (!checked) {
+                  storeRememberedEmail('')
+                  setEditingEmail(true)
                 }
               }}
             />
-            이메일 기억하기
+            이 앱에서 이메일 기억하기
           </label>
           <label htmlFor="password">비밀번호</label>
           <div className="password-input">
             <input
               id="password"
               type={visible ? 'text' : 'password'}
-              autoComplete="current-password"
+              autoComplete="off"
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -203,7 +232,7 @@ export function LoginPage() {
         </form>
         <p className="login-privacy">
           <ShieldCheck size={15} />
-          로그인 상태는 이 기기에 유지돼요. 비밀번호는 저장하지 않아요.
+          로그인은 유지되고, 이 앱은 이메일만 기억해요. 비밀번호는 저장하지 않아요.
         </p>
         {useEmulators && (
           <p className="emulator-label">

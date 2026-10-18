@@ -1431,6 +1431,34 @@ textarea:focus-visible {
 .login-panel input#email {
   margin-bottom: 8px;
 }
+.remembered-account {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  border: 1px solid #ded8cd;
+  border-radius: 5px;
+  background: var(--surface);
+}
+.remembered-account-label,
+.remembered-account-email {
+  display: block;
+}
+.remembered-account-label {
+  margin-bottom: 4px;
+  color: var(--muted);
+  font-size: 10px;
+}
+.remembered-account-email {
+  overflow-wrap: anywhere;
+  font-size: 13px;
+}
+.remembered-account .text-button {
+  flex: none;
+  color: var(--accent);
+}
 .login-panel .remember-email {
   align-items: center;
   gap: 9px;
