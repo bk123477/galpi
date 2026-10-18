@@ -1,0 +1,37 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isOwner(uid) {
+      return request.auth != null && request.auth.uid == uid
+        && uid == 'REPLACE_WITH_OWNER_UID';
+    }
+    function validBook(uid, bookId) {
+      let d = request.resource.data;
+      let fields = ['title', 'author', 'note', 'type', 'status', 'coverPath', 'createdAt', 'updatedAt', 'finishedAt'];
+      return d.keys().hasOnly(fields) && d.keys().hasAll(fields)
+        && d.title is string && d.title.size() > 0 && d.title.size() <= 120
+        && d.title.matches('.*[^\\s].*')
+        && d.author is string && d.author.size() <= 120
+        && d.note is string && d.note.size() <= 2000
+        && d.type in ['webnovel', 'book', 'other']
+        && d.status in ['planned', 'reading', 'finished']
+        && (d.coverPath == null || (d.coverPath is string && d.coverPath.size() <= 300
+          && d.coverPath.matches('users/' + uid + '/covers/' + bookId + '/[a-zA-Z0-9_-]+\\.(webp|jpeg|png)')))
+        && d.createdAt is timestamp && d.updatedAt == request.time
+        && ((d.status == 'finished' && d.finishedAt is timestamp)
+          || (d.status != 'finished' && d.finishedAt == null));
+    }
+    match /users/{uid}/books/{bookId} {
+      allow read: if isOwner(uid);
+      allow create: if isOwner(uid) && validBook(uid, bookId)
+        && request.resource.data.createdAt == request.time
+        && (request.resource.data.status != 'finished' || request.resource.data.finishedAt == request.time);
+      allow update: if isOwner(uid) && validBook(uid, bookId)
+        && request.resource.data.createdAt == resource.data.createdAt
+        && (request.resource.data.status != 'finished'
+          || (resource.data.status == 'finished' && request.resource.data.finishedAt == resource.data.finishedAt)
+          || (resource.data.status != 'finished' && request.resource.data.finishedAt == request.time));
+      allow delete: if isOwner(uid);
+    }
+  }
+}

@@ -1,0 +1,18 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    function isOwner(uid) {
+      return request.auth != null && request.auth.uid == uid
+        && uid == 'REPLACE_WITH_OWNER_UID';
+    }
+    match /users/{uid}/covers/{bookId}/{fileName} {
+      allow read, delete: if isOwner(uid);
+      allow create: if isOwner(uid) && resource == null && request.resource.size > 0
+        && request.resource.size <= 3 * 1024 * 1024
+        && ((request.resource.contentType == 'image/webp' && fileName.matches('[a-zA-Z0-9_-]+\\.webp'))
+          || (request.resource.contentType == 'image/jpeg' && fileName.matches('[a-zA-Z0-9_-]+\\.jpeg'))
+          || (request.resource.contentType == 'image/png' && fileName.matches('[a-zA-Z0-9_-]+\\.png')));
+      allow update: if false;
+    }
+  }
+}

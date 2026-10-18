@@ -1,0 +1,11 @@
+[
+  {
+    "origin": [
+      "https://galpi-11e97.web.app",
+      "https://galpi-11e97.firebaseapp.com"
+    ],
+    "method": ["GET"],
+    "responseHeader": ["Content-Type"],
+    "maxAgeSeconds": 3600
+  }
+]
